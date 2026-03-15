@@ -1,0 +1,22 @@
+cff-version: 1.2.0
+title: "Nextflow Eye-Cancer Workflow"
+license: MIT
+references:
+  - type: article
+    authors:
+      - family-names: Furney
+        given-names: Simon J.
+    title: "SF3B1 mutations are associated with alternative splicing in uveal melanoma"
+    journal: Cancer Discovery
+    year: 2013
+    doi: 10.1158/2159-8290.CD-13-0330
+    pmid: "23861464"
+  - type: article
+    authors:
+      - family-names: Harbour
+        given-names: J. William
+    title: "Recurrent mutations at codon 625 of the splicing factor SF3B1 in uveal melanoma"
+    journal: Nature Genetics
+    year: 2013
+    doi: 10.1038/ng.2523
+    pmid: "23313955"
