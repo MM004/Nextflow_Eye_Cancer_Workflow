@@ -1,22 +1,39 @@
 cff-version: 1.2.0
+message: "If you use this workflow, please cite it using the metadata below and the references listed."
 title: "Nextflow Eye-Cancer Workflow"
 license: MIT
+authors:
+  - family-names: Tanja
+    given-names: Gesslbauer
+    affiliation: "Hochschule Campus Wien (Student of Master´s Program Bioinformatics 2025-2027)"
+  - family-names: Jessica
+    given-names: Kirchner
+    affiliation: "Hochschule Campus Wien (Student of Master´s Program Bioinformatics 2025-2027)"
+  - family-names: Susanna
+    given-names: Kummer
+    affiliation: "Hochschule Campus Wien (Student of Master´s Program Bioinformatics 2025-2027)"
+  - family-names: Mathias
+    given-names: Mayrgündter
+    affiliation: "Hochschule Campus Wien (Student of Master´s Program Bioinformatics 2025-2027)"
+  - family-names: Konstantin
+    given-names: Zilberburg
+    affiliation: "Hochschule Campus Wien (Student of Master´s Program Bioinformatics 2025-2027)"
 references:
   - type: article
     authors:
       - family-names: Furney
         given-names: Simon J.
     title: "SF3B1 mutations are associated with alternative splicing in uveal melanoma"
-    journal: Cancer Discovery
+    journal-title: "Cancer Discovery"
     year: 2013
     doi: 10.1158/2159-8290.CD-13-0330
-    pmid: "23861464"
+    url: "https://pubmed.ncbi.nlm.nih.gov/23861464/"
   - type: article
     authors:
       - family-names: Harbour
         given-names: J. William
     title: "Recurrent mutations at codon 625 of the splicing factor SF3B1 in uveal melanoma"
-    journal: Nature Genetics
+    journal-title: "Nature Genetics"
     year: 2013
     doi: 10.1038/ng.2523
-    pmid: "23313955"
+    url: "https://pubmed.ncbi.nlm.nih.gov/23313955/"
