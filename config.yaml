@@ -1,0 +1,9 @@
+samples: "samples.tsv"
+data_dir: "data"
+reference:
+  genome: "/references/Homo_sapiens.GRCh37.75.dna.primary_assembly.fa"       # hg19
+  gtf: "/references/Homo_sapiens.GRCh37.75.gtf"          # Ensembl or GENCODE for hg19
+  hisat2_index: "/references/grch37/genome" # or build in pipeline
+trimmed_read_length: 99   # Furney trimmed Harbour data to 99bp
+fdr_threshold: 0.1
+threads: 8
