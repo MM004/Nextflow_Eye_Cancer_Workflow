@@ -34,6 +34,10 @@ process HISAT2_ALIGN {
           -2 ${reads[1]} \\
           --known-splicesite-infile ${splicesites} \\
           --dta \\
+          --rg-id ${sample_id} \\
+          --rg SM:${sample_id} \\
+          --rg PL:ILLUMINA \\
+          --rg LB:${sample_id} \\
           -p ${task.cpus} \\
           --summary-file ${sample_id}_hisat2.log \\
           -S ${sample_id}.sam
