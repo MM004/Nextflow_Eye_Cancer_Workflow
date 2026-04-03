@@ -1,7 +1,7 @@
 process TRIMMOMATIC {
       tag "${sample_id}"
-      publishDir "${params.outdir}/trimmed", mode: 'copy', pattern: '*.trimmed.fastq.gz'
-      publishDir "${params.outdir}/trimmed/logs", mode: 'copy', pattern: '*.log'
+      publishDir "${params.outdir}/trimmed", mode: 'symlink', pattern: '*.trimmed.fastq.gz'
+      publishDir "${params.outdir}/trimmed/logs", mode: 'symlink', pattern: '*.log'
 
       input:
       tuple val(sample_id), path(reads)

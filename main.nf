@@ -7,8 +7,8 @@ include { MULTIQC as MULTIQC_RAW    } from './modules/multiqc'
 include { MULTIQC as MULTIQC_TRIMMED } from './modules/multiqc'
 include { HISAT2_EXTRACT_SPLICESITES } from './modules/hisat2'
 include { HISAT2_ALIGN               } from './modules/hisat2'
-include { SAM_TO_SORTED_BAM          } from './modules/samtools'
-include { MARK_DUPLICATES            } from './modules/picard'
+// include { SAM_TO_SORTED_BAM          } from './modules/samtools'
+// include { MARK_DUPLICATES            } from './modules/picard'
 include { ALIGNMENT_QC               } from './modules/alignment_qc'
 
 workflow {
@@ -35,6 +35,7 @@ workflow {
     FASTQC_TRIMMED(TRIMMOMATIC.out.trimmed_reads, "trimmed")
 
     MULTIQC_RAW(FASTQC_RAW.out.zip.collect(), "raw")
+   
     MULTIQC_TRIMMED(FASTQC_TRIMMED.out.zip.collect(), "trimmed")
 
     // Phase 3: Alignment
@@ -42,9 +43,7 @@ workflow {
     HISAT2_ALIGN(
         TRIMMOMATIC.out.trimmed_reads,
         hisat2_index,
-        HISAT2_EXTRACT_SPLICESITES.out.splicesites
+        HISAT2_EXTRACT_SPLICESITES.out.splicesites.first()
     )
-    SAM_TO_SORTED_BAM(HISAT2_ALIGN.out.sam)
-    MARK_DUPLICATES(SAM_TO_SORTED_BAM.out.bam)
-    ALIGNMENT_QC(MARK_DUPLICATES.out.bam)
+    ALIGNMENT_QC(HISAT2_ALIGN.out.bam)
 }

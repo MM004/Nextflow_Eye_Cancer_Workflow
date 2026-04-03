@@ -1,5 +1,6 @@
 process HISAT2_EXTRACT_SPLICESITES {                                                                                                                                                                        
-      publishDir "${params.outdir}/references", mode: 'copy'                        
+      publishDir "${params.outdir}/references", mode: 'symlink'                        
+
       input:                                                                                                                                                                                                
       path gtf
 
@@ -14,7 +15,8 @@ process HISAT2_EXTRACT_SPLICESITES {
 
 process HISAT2_ALIGN {
       tag "${sample_id}"
-      publishDir "${params.outdir}/aligned", mode: 'copy', pattern: '*.log'
+      publishDir "${params.outdir}/aligned", mode: 'symlink', pattern: '*.log'
+      publishDir "${params.outdir}/dedup", mode: 'symlink', pattern: '*.{bam,bai,txt}'
 
       input:
       tuple val(sample_id), path(reads) // ("sample_1", [sample_1_R1.trimmed.fastq.gz, sample_1_R2.trimmed.fastq.gz])     
@@ -22,12 +24,14 @@ process HISAT2_ALIGN {
       path splicesites			// splicesites.tsv from the extract step
 
       output:
-      tuple val(sample_id), path("*.sam"), emit: sam
-      path "*.log"                       , emit: log
+      tuple val(sample_id), path("*.dedup.bam"), path("*.dedup.bam.bai"), emit: bam
+      path "*.metrics.txt", emit: metrics
+      path "*.log"        , emit: log
 
       script:
       def index_base = index[0].toString().replaceAll(/\.\d\.ht2$/, '')
       """
+      # Align and sort
       hisat2 \\
           -x ${index_base} \\
           -1 ${reads[0]} \\
@@ -40,6 +44,22 @@ process HISAT2_ALIGN {
           --rg LB:${sample_id} \\
           -p ${task.cpus} \\
           --summary-file ${sample_id}_hisat2.log \\
-          -S ${sample_id}.sam
+      | samtools sort -@ 4 -o ${sample_id}.sorted.bam
+
+      samtools index ${sample_id}.sorted.bam
+
+      # Mark duplicates
+      picard MarkDuplicates \\
+          I=${sample_id}.sorted.bam \\
+          O=${sample_id}.dedup.bam \\
+          M=${sample_id}.metrics.txt \\
+          REMOVE_DUPLICATES=false \\
+          CREATE_INDEX=true \\
+          VALIDATION_STRINGENCY=LENIENT
+
+      mv ${sample_id}.dedup.bai ${sample_id}.dedup.bam.bai
+
+      # Delete intermediate to free space
+      rm ${sample_id}.sorted.bam ${sample_id}.sorted.bam.bai
       """
   }
