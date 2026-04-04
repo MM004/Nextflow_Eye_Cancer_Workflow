@@ -7,13 +7,15 @@ include { MULTIQC as MULTIQC_RAW    } from './modules/multiqc'
 include { MULTIQC as MULTIQC_TRIMMED } from './modules/multiqc'
 include { HISAT2_EXTRACT_SPLICESITES } from './modules/hisat2'
 include { HISAT2_ALIGN               } from './modules/hisat2'
-// include { SAM_TO_SORTED_BAM          } from './modules/samtools'
-// include { MARK_DUPLICATES            } from './modules/picard'
 include { ALIGNMENT_QC               } from './modules/alignment_qc'
 include { DEXSEQ_PREPARE_ANNOTATION  } from './modules/dexseq'
 include { DEXSEQ_COUNT               } from './modules/dexseq'
 include { DEXSEQ_ANALYSIS            } from './modules/dexseq'
 include { RMATS                      } from './modules/rmats'
+include { SPLICING_SUMMARY  } from './modules/visualization'
+include { COVERAGE_PLOTS    } from './modules/visualization'
+include { SPLICING_HEATMAP  } from './modules/visualization'
+include { MULTIQC as MULTIQC_FINAL } from './modules/multiqc'
 
 workflow {
     // Parse sample sheet -> channel of [sample_id, [r1, r2]]
@@ -71,5 +73,35 @@ workflow {
             .collect(),
         samples_file,
         gtf
+    )
+
+    // Phase 5: Visualization & Summary
+    SPLICING_SUMMARY(
+        DEXSEQ_ANALYSIS.out.significant,
+        RMATS.out.jc_results.collect(),
+        samples_file
+    )
+
+    COVERAGE_PLOTS(
+        HISAT2_ALIGN.out.bam
+            .flatMap { sample_id, bam, bai -> [bam, bai] }
+            .collect(),
+        samples_file
+    )
+
+    SPLICING_HEATMAP(
+        RMATS.out.jc_results.collect(),
+        samples_file
+    )
+
+    MULTIQC_FINAL(
+        FASTQC_RAW.out.zip
+            .mix(FASTQC_TRIMMED.out.zip)
+            .mix(TRIMMOMATIC.out.log)
+            .mix(HISAT2_ALIGN.out.log)
+            .mix(HISAT2_ALIGN.out.metrics)
+            .mix(ALIGNMENT_QC.out.flagstat)
+            .collect(),
+        "final"
     )
 }

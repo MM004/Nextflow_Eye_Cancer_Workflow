@@ -20,11 +20,20 @@ targets <- data.frame(
 dexseq <- read.table(opts$dexseq, header=TRUE, row.names=1, sep="\t",
                     stringsAsFactors=FALSE, check.names=FALSE)
 
-dex_results <- lapply(targets$ensembl_id, function(gid) {
-    hits <- grepl(gid, rownames(dexseq), fixed=TRUE)
-    if (any(hits)) list(count=sum(hits), min_fdr=min(dexseq$padj[hits], na.rm=TRUE))
-    else list(count=0, min_fdr=NA)
+# Alternative Ensembl IDs for genes with complex annotations
+alt_ids <- list(GUSBP11 = c("ENSG00000228315", "ENSG00000214265"))
+
+dex_results <- lapply(seq_len(nrow(targets)), function(i) {
+      gid <- targets$ensembl_id[i]
+      gname <- targets$gene_name[i]
+      search_ids <- if (gname %in% names(alt_ids)) alt_ids[[gname]] else gid
+      hits <- Reduce(`|`, lapply(search_ids, function(id) grepl(id, rownames(dexseq), fixed=TRUE)))
+      if (any(hits)) list(count=sum(hits), min_fdr=min(dexseq$padj[hits], na.rm=TRUE))
+      else list(count=0, min_fdr=NA)
 })
+
+
+
 
 # Parse rMATS results
 event_types <- c("SE", "A3SS", "A5SS", "MXE", "RI")
