@@ -1,203 +1,268 @@
-# Nextflow Eye-Cancer Workflow
+# Uveal Melanoma SF3B1 Differential Splicing Pipeline
+Nextflow DSL2 pipeline reproducing the RNA-seq analysis from
+**Furney et al. (2013)** — *SF3B1 mutations are associated with alternative
+splicing in uveal melanoma* (Cancer Discovery 3(10):1122-9).
 
-Reproducing the RNA-seq analysis from Furney et al. (2013), which showed that SF3B1 mutations are
-associated with differential alternative splicing in uveal melanoma.
+## Quick Start
 
-## References
+```bash
+# 1. Activate the base conda environment
+conda activate uveal-pipeline
 
-1. **Furney et al.** "SF3B1 mutations are associated with alternative splicing in uveal melanoma" —
-*Cancer Discov.* 2013
-   https://pubmed.ncbi.nlm.nih.gov/23861464/
-2. **Harbour et al.** "Recurrent mutations at codon 625 of the splicing factor SF3B1 in uveal
-melanoma" — *Nat Genet.* 2013
-   https://pubmed.ncbi.nlm.nih.gov/23313955/
+# 2. Run the pipeline (use screen for long runs)
+screen -S nxf
+nextflow run main.nf -resume
+
+# 3. Results appear in results/
+```
+
+> **Important:** The `uveal-pipeline` conda environment must be active before
+> running the pipeline. The Trimmomatic adapter path is resolved automatically
+> from `$CONDA_PREFIX`.
+
+## Requirements
+
+### Conda Environments
+
+Two conda environments are required:
+
+| Environment | Python | Purpose |
+|---|---|---|
+| `uveal-pipeline` | 3.14 | FastQC, Trimmomatic, HISAT2, samtools, Picard, MultiQC |
+| `splicing-env` | 3.12 | DEXSeq, HTSeq, rMATS, R packages (optparse, pheatmap, ggplot2) |
+
+Create from exported YAML files:
+
+```bash
+conda env create -f environment.yml        # uveal-pipeline
+conda env create -f splicing-env.yml       # splicing-env
+```
+
+> **Note:** rMATS and HTSeq require Python ≤3.12, which is why a separate
+> environment is needed. The pipeline calls it via `conda run -n splicing-env`.
+
+### Reference Data
+
+Download GRCh37 (Ensembl release 75) into `references/`:
+
+```bash
+# Genome FASTA
+wget https://ftp.ensembl.org/pub/release-75/fasta/homo_sapiens/dna/Homo_sapiens.GRCh37.75.dna.primary_assembly.fa.gz
+gunzip Homo_sapiens.GRCh37.75.dna.primary_assembly.fa.gz
+
+# GTF annotation
+wget https://ftp.ensembl.org/pub/release-75/gtf/homo_sapiens/Homo_sapiens.GRCh37.75.gtf.gz
+gunzip Homo_sapiens.GRCh37.75.gtf.gz
+
+# Build HISAT2 index
+mkdir -p references/grch37
+hisat2-build Homo_sapiens.GRCh37.75.dna.primary_assembly.fa references/grch37/genome
+```
+
+### Raw Data
+
+Download paired-end FASTQ files from SRA062359 into `data/`:
+
+```bash
+mkdir -p data
+for SRR in SRR628582 SRR628583 SRR628584 SRR628585 SRR628586 SRR628587 SRR628588 SRR628589; do
+    fasterq-dump --split-files -O data/ ${SRR}
+    gzip data/${SRR}_1.fastq data/${SRR}_2.fastq
+done
+```
+
+## Configuration
+
+### Configurable Parameters
+
+Edit `nextflow.config` to match your setup:
+
+| Parameter | Description | Default |
+|---|---|---|
+| `params.work_dir` | Nextflow work directory (use `/tmp` if disk-limited) | `/tmp/kzilberburg_nxf` |
+| `params.splicing_env` | Name of Python 3.12 conda env for DEXSeq/rMATS | `splicing-env` |
+| `params.genome` | Path to GRCh37 reference FASTA | `references/Homo_sapiens.GRCh37.75.dna.primary_assembly.fa` |
+| `params.gtf` | Path to Ensembl 75 GTF | `references/Homo_sapiens.GRCh37.75.gtf` |
+| `params.hisat2_index` | HISAT2 index base path | `references/grch37/genome` |
+| `params.adapters` | Trimmomatic adapter FASTA | Auto-resolved from `$CONDA_PREFIX` |
+| `params.fdr_threshold` | FDR cutoff for significance | `0.1` |
+| `params.trimmed_read_length` | Read length after cropping | `99` |
+
+### Key Configuration Notes
+
+- **`work_dir`**: The pipeline generates large intermediate files (~60GB during alignment).
+  If your home directory has limited quota, point this to a scratch partition like `/tmp`.
+- **`adapters`**: Resolved via `${System.getenv('CONDA_PREFIX')}` — requires `uveal-pipeline`
+  to be the active conda environment when launching the pipeline.
+- **`splicing_env`**: Referenced by `conda run -n` inside processes. Change this if your
+  Python 3.12 environment has a different name.
 
 ## Samples
 
-8 uveal melanoma class 1 tumors from Harbour et al. (SRA062359), re-analyzed by Furney et al.:
+8 uveal melanoma RNA-seq samples from Harbour et al. (SRA062359):
 
-| Sample ID | Tumor   | SRR Accession | SF3B1 Status | Mutation |
-|-----------|---------|---------------|--------------|----------|
-| sample_1  | MM010   | SRR628582     | mutant       | R625C    |
-| sample_2  | MM065T  | SRR628583     | mutant       | R625C    |
-| sample_3  | MM064T  | SRR628584     | mutant       | R625H    |
-| sample_4  | MM176T  | SRR628589     | mutant       | R625C    |
-| sample_5  | MM016T  | SRR628585     | wildtype     | —        |
-| sample_6  | MM082T  | SRR628586     | wildtype     | —        |
-| sample_7  | MM089T  | SRR628587     | wildtype     | —        |
-| sample_8  | MM132T  | SRR628588     | wildtype     | —        |
+| Sample | Condition | SRA Accession | Alignment Rate |
+|---|---|---|---|
+| sample_1 | SF3B1 mutant | SRR628582 | 97.10% |
+| sample_2 | SF3B1 mutant | SRR628583 | 97.14% |
+| sample_3 | SF3B1 mutant | SRR628584 | 97.25% |
+| sample_4 | SF3B1 mutant | SRR628589 | 96.53% |
+| sample_5 | wildtype | SRR628585 | 97.10% |
+| sample_6 | wildtype | SRR628586 | 97.05% |
+| sample_7 | wildtype | SRR628587 | 96.80% |
+| sample_8 | wildtype | SRR628588 | 97.23% |
 
 ## Pipeline Overview
 
-raw FASTQ ── FastQC ──────────────────────────── MultiQC (raw)
-   │
-   └── Trimmomatic (99bp crop) ── FastQC ─────── MultiQC (trimmed)
-         │
-         └── HISAT2 (GRCh37) ── samtools sort ── Picard MarkDuplicates
-                                                      │
-                                                      ├── samtools flagstat/idxstats
-                                                      ├── DEXSeq (differential exon usage)
-                                                      ├── rMATS (alternative splicing events)
-                                                      └── Visualization (coverage plots, heatmap)
+```
+raw FASTQ ──► FastQC (raw) ──────────────────────────────────┐
+    │                                                        │
+    ▼                                                        │
+Trimmomatic (crop 99bp, adapter removal)                     │
+    │                                                        │
+    ├──► FastQC (trimmed) ───────────────────────────────────┤
+    │                                                        │
+    ▼                                                        │
+HISAT2 align + samtools sort + Picard MarkDuplicates         │
+    │                                                        │
+    ├──► samtools flagstat + idxstats ───────────────────────┤
+    │                                                        │
+    ├────────────────┬──────────────┬────────────────┐       │
+    ▼                ▼              ▼                ▼       │
+DEXSeq count      rMATS      Coverage plots   PSI heatmap    │
+    │                │              │                │       │
+    ▼                │              │                │       │
+DEXSeq analysis      │              │                │       │
+    │                │              │                │       │
+    └────────┬───────┘              │                │       │
+             ▼                      │                │       │
+    Splicing summary                │                │       │
+             │                      │                │       │
+             └──────────────────────┴────────────────┘       │
+                                                             │
+                      MultiQC (final) ◄──────────────────────┘
+```
 
-## Setup
+### Processes
 
-### 1. Clone the repository
-```bash
-git clone <repo-url>
-cd Nextflow_Eye_Cancer_Workflow
+| Process | Tool | Module |
+|---|---|---|
+| FASTQC_RAW / FASTQC_TRIMMED | FastQC | `modules/fastqc.nf` |
+| TRIMMOMATIC | Trimmomatic 0.40 | `modules/trimmomatic.nf` |
+| HISAT2_EXTRACT_SPLICESITES | HISAT2 | `modules/hisat2.nf` |
+| HISAT2_ALIGN | HISAT2 + samtools + Picard | `modules/hisat2.nf` |
+| ALIGNMENT_QC | samtools flagstat/idxstats | `modules/alignment_qc.nf` |
+| DEXSEQ_PREPARE_ANNOTATION | DEXSeq (R/Bioconductor) | `modules/dexseq.nf` |
+| DEXSEQ_COUNT | HTSeq/DEXSeq | `modules/dexseq.nf` |
+| DEXSEQ_ANALYSIS | DEXSeq | `modules/dexseq.nf` |
+| RMATS | rMATS turbo | `modules/rmats.nf` |
+| SPLICING_SUMMARY | R (custom script) | `modules/visualization.nf` |
+| COVERAGE_PLOTS | R/ggplot2 | `modules/visualization.nf` |
+| SPLICING_HEATMAP | R/pheatmap | `modules/visualization.nf` |
+| MULTIQC_RAW / MULTIQC_TRIMMED / MULTIQC_FINAL | MultiQC | `modules/multiqc.nf` |
 
-### 2. Create conda environments
+## Results
 
-# Main pipeline environment (QC, trimming, alignment)
-conda env create -f environment.yml
-conda activate uveal-pipeline
+### Quality Control (Phase 2)
 
-# Splicing analysis environment (DEXSeq, rMATS — requires Python 3.12)
-conda env create -f splicing-env.yml
+- **Read survival:** 96.7% average after Trimmomatic
+- **Read length:** Cropped from 101bp to 99bp (rMATS compatibility)
+- Adapter content removed (TruSeq3-PE-2)
 
-### 3. Download references
+### Alignment (Phase 3)
 
-mkdir -p references && cd references
+- **Aligner:** HISAT2 with splice-site awareness (GRCh37/Ensembl 75)
+- **Alignment rate:** All 8 samples >96.5%
+- Duplicate marking with Picard MarkDuplicates (flagged, not removed)
 
-# HISAT2 pre-built index for GRCh37
-wget https://genome-idx.s3.amazonaws.com/hisat/grch37_genome.tar.gz
-tar -xzf grch37_genome.tar.gz && rm grch37_genome.tar.gz
+### Differential Splicing (Phase 4)
 
-# Genome FASTA and GTF (Ensembl release 75 — last GRCh37 build)
-wget https://ftp.ensembl.org/pub/release-75/fasta/homo_sapiens/dna/Homo_sapiens.GRCh37.75.dna.prima
-ry_assembly.fa.gz
-wget https://ftp.ensembl.org/pub/release-75/gtf/homo_sapiens/Homo_sapiens.GRCh37.75.gtf.gz
-gunzip *.gz
+**DEXSeq:** 222 significant exonic bins (FDR < 0.1)
+**rMATS:** 1,322 significant alternative splicing events (FDR < 0.1)
 
-cd ..
+#### Target Gene Reproduction (Furney et al. Table 1)
 
-### 4. Symlink or download FASTQ data
+| Gene | DEXSeq | rMATS | Reproduced? |
+|---|---|---|---|
+| ABCC5 | 20 bins (FDR 1.12e-14) | SE (FDR 0.0) | Yes |
+| CRNDE | 3 bins (FDR 7.88e-06) | SE (FDR 0.0) | Yes |
+| UQCC1 | 31 bins (FDR 5.66e-27) | SE, A3SS (FDR 0.0) | Yes |
+| GUSBP11 | 2 bins (FDR 4.05e-11) | SE (FDR 7.5e-05) | Yes |
+| ANKHD1 | 0 bins | A5SS (FDR 0.015) | Partial (rMATS only) |
+| ADAM12 | Not testable | Not expressed | No |
 
-ln -s /path/to/fastq/files data
-Expected files: data/SRR6285{82-89}_{1,2}.fastq.gz
+**5 of 6 target genes reproduced.** 4 confirmed by both methods.
 
-### 5. Run the pipeline
+- **ADAM12** was not expressed in these samples (absent from rMATS output entirely),
+  consistent with the original study noting variable expression across cohorts.
+- **GUSBP11** has two Ensembl IDs in GRCh37 (ENSG00000228315 and ENSG00000214265);
+  the pipeline searches for both.
 
-nextflow run main.nf -resume
-Phase 4 processes (DEXSeq, rMATS) automatically call the splicing-env environment via conda run.
+### Visualization (Phase 5)
 
-**Tools and Justifications**
-┌────────────────────┬──────────────────┬────────────┬────────────────────────────────────────────┐
-│        Step        │ Original Paper   │ Our Choice │               Justification                │
-│                    │     (Furney)     │            │                                            │
-├────────────────────┼──────────────────┼────────────┼────────────────────────────────────────────┤
-│ Alignment          │ TopHat           │ HISAT2     │ TopHat deprecated; HISAT2 is its successor │
-│                    │                  │            │  by the same authors                       │
-├────────────────────┼──────────────────┼────────────┼────────────────────────────────────────────┤
-│ Duplicate marking  │ Picard           │ Picard     │ Same tool                                  │
-├────────────────────┼──────────────────┼────────────┼────────────────────────────────────────────┤
-│ Differential exon  │ DEXSeq           │ DEXSeq     │ Same tool, still maintained                │
-│ usage              │                  │            │                                            │
-├────────────────────┼──────────────────┼────────────┼────────────────────────────────────────────┤
-│ Alternative        │ MATS             │ rMATS      │ Updated version of same algorithm          │
-│ splicing           │                  │ (turbo)    │                                            │
-├────────────────────┼──────────────────┼────────────┼────────────────────────────────────────────┤
-│ Read trimming      │ 99bp crop        │ 99bp crop  │ Matches Furney methodology                 │
-├────────────────────┼──────────────────┼────────────┼────────────────────────────────────────────┤
-│ Reference genome   │ GRCh37           │ GRCh37     │ Same genome for reproducibility            │
-├────────────────────┼──────────────────┼────────────┼────────────────────────────────────────────┤
-│ Pipeline manager   │ —                │ Nextflow   │ Course requirement; ensures                │
-│                    │                  │ DSL2       │ reproducibility                            │
-└────────────────────┴──────────────────┴────────────┴────────────────────────────────────────────┘
-**Phase 2 Results — QC Summary**
+Generated figures in `results/figures/`:
 
-- Read survival after trimming: ~96.7% across all samples
-- Reads cropped to 99bp as per Furney methodology
-- Outlier: sample_4 (MM176T) — 60% duplication rate, 52% GC content, fails FastQC GC content check.
-Kept in analysis (used in original paper).
-
-**Phase 3 Results — Alignment Summary**
-┌────────────────────────┬───────┬───────────────┬───────────┬──────────────┐
-│         Sample         │ Reads │ Concordant 1x │ Multi-map │ Overall Rate │
-├────────────────────────┼───────┼───────────────┼───────────┼──────────────┤
-│ sample_1 (MM010, mut)  │ 13.8M │     92.4%     │   5.0%    │    98.70%    │
-├────────────────────────┼───────┼───────────────┼───────────┼──────────────┤
-│ sample_2 (MM065T, mut) │ 16.8M │     82.6%     │   14.5%   │    98.57%    │
-├────────────────────────┼───────┼───────────────┼───────────┼──────────────┤
-│ sample_3 (MM064T, mut) │ 10.3M │     92.4%     │   4.3%    │    98.39%    │
-├────────────────────────┼───────┼───────────────┼───────────┼──────────────┤
-│ sample_4 (MM176T, mut) │ 17.5M │     85.6%     │   8.1%    │    96.53%    │
-├────────────────────────┼───────┼───────────────┼───────────┼──────────────┤
-│ sample_5 (MM016T, wt)  │ 14.0M │     82.9%     │   14.3%   │    98.60%    │
-├────────────────────────┼───────┼───────────────┼───────────┼──────────────┤
-│ sample_6 (MM082T, wt)  │ 10.4M │     91.7%     │   5.2%    │    98.47%    │
-├────────────────────────┼───────┼───────────────┼───────────┼──────────────┤
-│ sample_7 (MM089T, wt)  │ 16.6M │     84.1%     │   13.5%   │    98.79%    │
-├────────────────────────┼───────┼───────────────┼───────────┼──────────────┤
-│ sample_8 (MM132T, wt)  │ 12.7M │     89.6%     │   7.7%    │    98.67%    │
-└────────────────────────┴───────┴───────────────┴───────────┴──────────────┘
-All samples >96.5% alignment rate. sample_4 (MM176T) is the weakest, consistent with QC outlier
-status.
-
-**Phase 4 — Differential Splicing Results**
-
-DEXSeq: 644,354 exonic bins tested, 222 significant at FDR < 0.1
-
-rMATS: 247 A3SS, 76 A5SS, 345 RI, 654 SE significant events at FDR < 0.1
-
-Reproduction of Furney et al. Table 2 target genes:
-┌─────────┬───────────────────────┬────────────────────┬─────────────┐
-│  Gene   │        DEXSeq         │       rMATS        │ Reproduced? │
-├─────────┼───────────────────────┼────────────────────┼─────────────┤
-│ UQCC    │ 12 bins (FDR 2.9e-08) │         —          │     YES     │
-├─────────┼───────────────────────┼────────────────────┼─────────────┤
-│ CRNDE   │ 3 bins (FDR 2.3e-04)  │ A3SS (FDR 5.2e-11) │     YES     │
-├─────────┼───────────────────────┼────────────────────┼─────────────┤
-│ ABCC5   │  2 bins (FDR 0.042)   │ A3SS (FDR 2.0e-05) │     YES     │
-├─────────┼───────────────────────┼────────────────────┼─────────────┤
-│ GUSBP11 │ 2 bins (FDR 4.0e-11)  │   SE (FDR 0.049)   │     YES     │
-├─────────┼───────────────────────┼────────────────────┼─────────────┤
-│ ANKHD1  │   1 bin (FDR 0.006)   │   SE (FDR 0.006)   │     YES     │
-├─────────┼───────────────────────┼────────────────────┼─────────────┤
-│ ADAM12  │           —           │         —          │     no      │
-└─────────┴───────────────────────┴────────────────────┴─────────────┘
-5 of 6 target genes confirmed. The three strongest candidates (ABCC5, CRNDE, UQCC) are all
-reproduced. ADAM12 was the weakest finding in the original paper.
+| File | Description |
+|---|---|
+| `coverage_ABCC5.pdf` | Read coverage across ABCC5 exons (mutant vs wildtype) |
+| `coverage_CRNDE.pdf` | Read coverage across CRNDE exons |
+| `coverage_UQCC1.pdf` | Read coverage across UQCC1 exons |
+| `splicing_heatmap.pdf` | PSI heatmap of top differentially spliced events |
+| `splicing_summary.tsv` | Combined DEXSeq + rMATS target gene summary table |
 
 ## Directory Structure
 
+```
 Nextflow_Eye_Cancer_Workflow/
-├── main.nf                 # Main workflow (Nextflow DSL2)
-├── nextflow.config         # Parameters and process resources
-├── samples.tsv             # Sample metadata
-├── environment.yml         # Conda env: QC, trimming, alignment
-├── splicing-env.yml        # Conda env: DEXSeq, rMATS (Python 3.12)
+├── main.nf                      # Main workflow
+├── nextflow.config              # Pipeline configuration
+├── samples.tsv                  # Sample metadata (sample_id, condition, sra_accession)
+├── environment.yml              # uveal-pipeline conda env export
+├── splicing-env.yml             # splicing-env conda env export
 ├── modules/
-│   ├── fastqc.nf
-│   ├── trimmomatic.nf
-│   ├── multiqc.nf
-│   ├── hisat2.nf           # HISAT2 align + samtools sort + Picard MarkDuplicates
-│   ├── alignment_qc.nf
-│   ├── dexseq.nf           # DEXSeq prepare annotation, count, analysis
-│   └── rmats.nf            # rMATS alternative splicing detection
+│   ├── fastqc.nf                # FastQC (reused for raw + trimmed)
+│   ├── trimmomatic.nf           # Read trimming and adapter removal
+│   ├── multiqc.nf               # MultiQC report aggregation
+│   ├── hisat2.nf                # Splice-aware alignment + deduplication
+│   ├── alignment_qc.nf          # samtools flagstat + idxstats
+│   ├── dexseq.nf                # Differential exon usage analysis
+│   ├── rmats.nf                 # Alternative splicing event detection
+│   └── visualization.nf         # Summary tables, coverage plots, heatmaps
 ├── scripts/
-│   └── run_dexseq.R        # DEXSeq differential exon usage analysis
-├── data/                   # Symlink to FASTQ files
-├── references/             # GRCh37 genome, GTF, HISAT2 index
-├── results/                # All pipeline outputs
-└── work/                   # Nextflow work directory
+│   ├── run_dexseq.R             # DEXSeq analysis script
+│   ├── summarize_splicing.R     # Combine DEXSeq + rMATS results
+│   ├── plot_coverage.R          # Per-gene coverage plots
+│   └── plot_heatmap.R           # PSI heatmap across samples
+├── data/                        # Raw FASTQ files (not tracked in git)
+├── references/                  # Genome, GTF, HISAT2 index (not tracked)
+└── results/                     # All pipeline outputs
+    ├── fastqc_raw/
+    ├── fastqc_trimmed/
+    ├── multiqc_raw/
+    ├── multiqc_trimmed/
+    ├── multiqc_final/
+    ├── trimmed/
+    ├── aligned/
+    ├── dedup/
+    ├── alignment_qc/
+    ├── dexseq/
+    ├── rmats/
+    └── figures/
+```
 
-## Target Genes
+## Troubleshooting
 
-Differential splicing expected in 6 genes (Furney et al. Table 2):
-┌─────────┬─────────────────────────────────────────┬──────────────────┐
-│  Gene   │             Splicing Event              │ Detection Method │
-├─────────┼─────────────────────────────────────────┼──────────────────┤
-│ ABCC5   │ Intron 5 retention                      │ DEXSeq + rMATS   │
-├─────────┼─────────────────────────────────────────┼──────────────────┤
-│ CRNDE   │ Alternative 3' splice site (exon 4)     │ DEXSeq + rMATS   │
-├─────────┼─────────────────────────────────────────┼──────────────────┤
-│ UQCC    │ Alternative terminal exons              │ DEXSeq + rMATS   │
-├─────────┼─────────────────────────────────────────┼──────────────────┤
-│ GUSBP11 │ Cassette exon 7                         │ rMATS            │
-├─────────┼─────────────────────────────────────────┼──────────────────┤
-│ ANKHD1  │ Alternative 3' splice site (exon 3)     │ rMATS            │
-├─────────┼─────────────────────────────────────────┼──────────────────┤
-│ ADAM12  │ Alternative terminal exons (exon 18/19) │ rMATS            │
-└─────────┴─────────────────────────────────────────┴──────────────────┘
+| Problem | Solution |
+|---|---|
+| Disk quota exceeded during alignment | Set `params.work_dir` to `/tmp/` or another scratch partition |
+| SSH disconnect kills pipeline | Run inside `screen -S nxf` |
+| R script changes not picked up by `-resume` | Add a comment change (e.g., `# v2`) to the process script block |
+| rMATS fails with Python error | Ensure `splicing-env` uses Python ≤3.12 |
+| DEXSeq count files have wrong format | Preprocessing step removes quotes and summary lines automatically |
+| `$CONDA_PREFIX` not set | Activate `uveal-pipeline` before running: `conda activate uveal-pipeline` |
+
+## Reference
+
+Furney SJ, Pedersen M, Gentien D, et al. SF3B1 mutations are associated
+with alternative splicing in uveal melanoma. *Cancer Discovery*. 2013;
+3(10):1122-1129. doi:10.1158/2159-8290.CD-13-0330

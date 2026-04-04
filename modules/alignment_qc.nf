@@ -1,6 +1,6 @@
 process ALIGNMENT_QC {
       tag "${sample_id}"
-      publishDir "${params.outdir}/alignment_qc", mode: 'copy'
+      publishDir "${params.outdir}/alignment_qc", mode: 'symlink'
 
       input:
       tuple val(sample_id), path(bam), path(bai)

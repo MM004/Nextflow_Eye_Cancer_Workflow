@@ -1,5 +1,5 @@
 process MULTIQC {
-    publishDir "${params.outdir}/multiqc_${stage}", mode: 'copy'
+    publishDir "${params.outdir}/multiqc_${stage}", mode: 'symlink'
 
     input:
     path '*'
