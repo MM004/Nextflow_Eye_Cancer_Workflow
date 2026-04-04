@@ -10,6 +10,10 @@ include { HISAT2_ALIGN               } from './modules/hisat2'
 // include { SAM_TO_SORTED_BAM          } from './modules/samtools'
 // include { MARK_DUPLICATES            } from './modules/picard'
 include { ALIGNMENT_QC               } from './modules/alignment_qc'
+include { DEXSEQ_PREPARE_ANNOTATION  } from './modules/dexseq'
+include { DEXSEQ_COUNT               } from './modules/dexseq'
+include { DEXSEQ_ANALYSIS            } from './modules/dexseq'
+include { RMATS                      } from './modules/rmats'
 
 workflow {
     // Parse sample sheet -> channel of [sample_id, [r1, r2]]
@@ -25,7 +29,8 @@ workflow {
     
     // Reference files
     hisat2_index = Channel.fromPath("${params.hisat2_index}*.ht2").collect()
-    gtf          = Channel.fromPath(params.gtf)
+    gtf          = file(params.gtf)
+    samples_file = file(params.samples)
 
     // Phase 2: QC & Trimming
     FASTQC_RAW(reads_ch, "raw")
@@ -46,4 +51,25 @@ workflow {
         HISAT2_EXTRACT_SPLICESITES.out.splicesites.first()
     )
     ALIGNMENT_QC(HISAT2_ALIGN.out.bam)
+    
+    // Phase 4A: Seq (differential exon usage)
+    DEXSEQ_PREPARE_ANNOTATION(gtf)
+    DEXSEQ_COUNT(
+        HISAT2_ALIGN.out.bam,
+        DEXSEQ_PREPARE_ANNOTATION.out.gff.first()
+    )
+    DEXSEQ_ANALYSIS(
+        DEXSEQ_COUNT.out.counts.collect(),
+        samples_file,
+        DEXSEQ_PREPARE_ANNOTATION.out.gff.first()
+    )
+
+    // Phase 4B: rMATS (alternative splicing events)
+    RMATS(
+        HISAT2_ALIGN.out.bam
+            .flatMap { sample_id, bam, bai -> [bam, bai] }
+            .collect(),
+        samples_file,
+        gtf
+    )
 }
