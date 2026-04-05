@@ -184,6 +184,7 @@ dependencies:
   - r-munsell=0.5.1=r45hc72bb7e_2
   - r-openssl=2.3.5=r45h68c19f5_0
   - r-optparse=1.7.5=r45hc72bb7e_2
+  - r-pheatmap=1.0.13=r45hc72bb7e_1
   - r-pillar=1.11.1=r45hc72bb7e_0
   - r-pkgconfig=2.0.3=r45hc72bb7e_5
   - r-plogr=0.2.0=r45hc72bb7e_1007
@@ -240,4 +241,4 @@ dependencies:
   - zlib=1.3.2=h25fd6f3_2
   - zlib-ng=2.3.3=hceb46e0_1
   - zstd=1.5.7=hb78ec9c_6
-prefix: /home/kzilberburg/miniconda3/envs/splicing-env
+prefix: /home/mmayrguendter/miniconda3/envs/splicing-env
