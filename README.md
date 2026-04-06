@@ -335,7 +335,6 @@ If you use this pipeline in your research, please cite the following foundationa
 ---
 
 Tools:
-Here are the references for the additional tools in your pipeline diagram:
 
 ---
 
