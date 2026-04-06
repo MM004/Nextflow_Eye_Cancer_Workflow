@@ -336,8 +336,6 @@ If you use this pipeline in your research, please cite the following foundationa
 
 Tools:
 
----
-
 > **Anaconda Inc.** (2020). Anaconda Software Distribution. Vers. 2-2.4.0.
 > URL: [https://docs.anaconda.com](https://docs.anaconda.com)
 
