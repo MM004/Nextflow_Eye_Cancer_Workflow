@@ -1,0 +1,171 @@
+<!--
+  ~ Copyright 2013-2024, Seqera Labs
+  ~
+  ~ Licensed under the Apache License, Version 2.0 (the "License");
+  ~ you may not use this file except in compliance with the License.
+  ~ You may obtain a copy of the License at
+  ~
+  ~     http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
+  -->
+<html>
+<head>
+<meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1, maximum-scale=1">
+</head>
+<body>
+<pre class="mermaid" style="text-align: center;">
+%%{
+  init: {
+    'theme': 'base',
+    'themeVariables': {
+      'primaryColor': '#B6ECE2',
+      'primaryTextColor': '#160F26',
+      'primaryBorderColor': '#065647',
+      'lineColor': '#545555',
+      'clusterBkg': '#BABCBD22',
+      'clusterBorder': '#DDDEDE',
+      'fontFamily': 'arial'
+    }
+  }
+}%%
+flowchart TB
+    subgraph " "
+    v0["Channel.fromPath"]
+    v3["Channel.fromPath"]
+    v5["stage"]
+    v10["stage"]
+    v14["stage"]
+    v19["stage"]
+    v23["gtf"]
+    v29["gtf"]
+    v35["samples"]
+    v40["samples"]
+    v41["gtf"]
+    v45["samples"]
+    v50["samples"]
+    v54["samples"]
+    v63["stage"]
+    end
+    v6(["FASTQC_RAW"])
+    subgraph " "
+    v7[" "]
+    v9[" "]
+    v12[" "]
+    v16[" "]
+    v17[" "]
+    v21[" "]
+    v22[" "]
+    v28[" "]
+    v37[" "]
+    v43[" "]
+    v47[" "]
+    v52[" "]
+    v56[" "]
+    v65[" "]
+    v66[" "]
+    end
+    v8(["TRIMMOMATIC"])
+    v11(["FASTQC_TRIMMED"])
+    v15(["MULTIQC_RAW"])
+    v20(["MULTIQC_TRIMMED"])
+    v24(["HISAT2_EXTRACT_SPLICESITES"])
+    v26(["HISAT2_ALIGN"])
+    v27(["ALIGNMENT_QC"])
+    v30(["DEXSEQ_PREPARE_ANNOTATION"])
+    v32(["DEXSEQ_COUNT"])
+    v36(["DEXSEQ_ANALYSIS"])
+    v42(["RMATS"])
+    v46(["SPLICING_SUMMARY"])
+    v51(["COVERAGE_PLOTS"])
+    v55(["SPLICING_HEATMAP"])
+    v64(["MULTIQC_FINAL"])
+    v1(( ))
+    v4(( ))
+    v13(( ))
+    v18(( ))
+    v25(( ))
+    v31(( ))
+    v33(( ))
+    v34(( ))
+    v38(( ))
+    v44(( ))
+    v48(( ))
+    v53(( ))
+    v57(( ))
+    v0 --> v1
+    v3 --> v4
+    v5 --> v6
+    v1 --> v6
+    v6 --> v7
+    v6 --> v13
+    v6 --> v57
+    v1 --> v8
+    v8 --> v11
+    v8 --> v9
+    v8 --> v26
+    v8 --> v57
+    v10 --> v11
+    v11 --> v12
+    v11 --> v18
+    v11 --> v57
+    v14 --> v15
+    v13 --> v15
+    v15 --> v17
+    v15 --> v16
+    v19 --> v20
+    v18 --> v20
+    v20 --> v22
+    v20 --> v21
+    v23 --> v24
+    v24 --> v25
+    v4 --> v26
+    v25 --> v26
+    v26 --> v27
+    v26 --> v32
+    v26 --> v38
+    v26 --> v48
+    v26 --> v57
+    v27 --> v28
+    v27 --> v57
+    v29 --> v30
+    v30 --> v31
+    v30 --> v34
+    v31 --> v32
+    v32 --> v33
+    v35 --> v36
+    v33 --> v36
+    v34 --> v36
+    v36 --> v37
+    v36 --> v46
+    v40 --> v42
+    v41 --> v42
+    v38 --> v42
+    v42 --> v43
+    v42 --> v44
+    v42 --> v53
+    v45 --> v46
+    v44 --> v46
+    v46 --> v47
+    v50 --> v51
+    v48 --> v51
+    v51 --> v52
+    v54 --> v55
+    v53 --> v55
+    v55 --> v56
+    v63 --> v64
+    v57 --> v64
+    v64 --> v66
+    v64 --> v65
+
+</pre>
+<script type="module">
+  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+  mermaid.initialize({ startOnLoad: true, maxTextSize: Number.MAX_SAFE_INTEGER, maxEdges: Number.MAX_SAFE_INTEGER });
+</script>
+</body>
+</html>

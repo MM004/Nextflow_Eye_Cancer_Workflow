@@ -18,6 +18,7 @@ authors:
   - family-names: Konstantin
     given-names: Zilberburg
     affiliation: "Hochschule Campus Wien (Student of Master´s Program Bioinformatics 2025-2027)"
+    
 references:
   - type: article
     authors:
@@ -28,6 +29,7 @@ references:
     year: 2013
     doi: 10.1158/2159-8290.CD-13-0330
     url: "https://pubmed.ncbi.nlm.nih.gov/23861464/"
+
   - type: article
     authors:
       - family-names: Harbour
@@ -37,3 +39,206 @@ references:
     year: 2013
     doi: 10.1038/ng.2523
     url: "https://pubmed.ncbi.nlm.nih.gov/23313955/"
+
+- type: software
+    authors:
+      - name: "Anaconda Inc."
+    title: "Anaconda Software Distribution"
+    version: "2-2.4.0"
+    year: 2020
+    url: "https://docs.anaconda.com"
+
+  - type: article
+    authors:
+      - family-names: "Andrews"
+        given-names: "S."
+    title: "FastQC: a quality control tool for high throughput sequence data"
+    year: 2010
+    url: "http://www.bioinformatics.babraham.ac.uk/projects/fastqc"
+
+  - type: article
+    authors:
+      - family-names: "Anders"
+        given-names: "Simon"
+      - family-names: "Reyes"
+        given-names: "Alejandro"
+      - family-names: "Huber"
+        given-names: "Wolfgang"
+    title: "Detecting differential usage of exons from RNA-seq data"
+    journal: "Genome Research"
+    volume: 22
+    issue: 10
+    start: 2008
+    end: 2017
+    year: 2012
+    doi: "10.1101/gr.133744.111"
+    pmid: "22722343"
+
+  - type: article
+    authors:
+      - family-names: "Bolger"
+        given-names: "Anthony M."
+      - family-names: "Lohse"
+        given-names: "Marc"
+      - family-names: "Usadel"
+        given-names: "Bjoern"
+    title: "Trimmomatic: a flexible trimmer for Illumina sequence data"
+    journal: "Bioinformatics"
+    volume: 30
+    issue: 15
+    start: 2114
+    end: 2120
+    year: 2014
+    doi: "10.1093/bioinformatics/btu170"
+    pmid: "24695404"
+
+  - type: article
+    authors:
+      - family-names: "Di Tommaso"
+        given-names: "Paolo"
+      - family-names: "Chatzou"
+        given-names: "Maria"
+      - family-names: "Floden"
+        given-names: "Evan W."
+      - family-names: "Prieto Barja"
+        given-names: "Pablo"
+      - family-names: "Palumbo"
+        given-names: "Emilio"
+      - family-names: "Notredame"
+        given-names: "Cedric"
+    title: "Nextflow enables reproducible computational workflows"
+    journal: "Nature Biotechnology"
+    volume: 35
+    issue: 4
+    start: 316
+    end: 319
+    year: 2017
+    doi: "10.1038/nbt.3820"
+    pmid: "28398311"
+
+  - type: article
+    authors:
+      - family-names: "Ewels"
+        given-names: "Philip"
+      - family-names: "Magnusson"
+        given-names: "Måns"
+      - family-names: "Lundin"
+        given-names: "Sverker"
+      - family-names: "Käller"
+        given-names: "Max"
+    title: "MultiQC: summarize analysis results for multiple tools and samples in a single report"
+    journal: "Bioinformatics"
+    volume: 32
+    issue: 19
+    start: 3047
+    end: 3048
+    year: 2016
+    doi: "10.1093/bioinformatics/btw354"
+    pmid: "27312411"
+
+  - type: article
+    authors:
+      - family-names: "Grüning"
+        given-names: "Björn"
+      - family-names: "Dale"
+        given-names: "Ryan"
+      - family-names: "Sjödin"
+        given-names: "Andreas"
+      - name: "Bioconda Team"
+    title: "Bioconda: sustainable and comprehensive software distribution for the life sciences"
+    journal: "Nature Methods"
+    volume: 15
+    issue: 7
+    start: 475
+    end: 476
+    year: 2018
+    doi: "10.1038/s41592-018-0046-7"
+    pmid: "29967506"
+
+  - type: article
+    authors:
+      - family-names: "Kim"
+        given-names: "Daehwan"
+      - family-names: "Paggi"
+        given-names: "Joseph M."
+      - family-names: "Park"
+        given-names: "Chanhee"
+      - family-names: "Bennett"
+        given-names: "Christopher"
+      - family-names: "Salzberg"
+        given-names: "Steven L."
+    title: "Graph-based genome alignment and genotyping with HISAT2 and HISAT-genotype"
+    journal: "Nature Biotechnology"
+    volume: 37
+    issue: 8
+    start: 907
+    end: 915
+    year: 2019
+    doi: "10.1038/s41587-019-0201-4"
+    pmid: "31375807"
+
+  - type: article
+    authors:
+      - family-names: "Li"
+        given-names: "Heng"
+      - family-names: "Handsaker"
+        given-names: "Bob"
+      - family-names: "Wysoker"
+        given-names: "Alec"
+      - family-names: "Fennell"
+        given-names: "Tim"
+      - family-names: "Ruan"
+        given-names: "Jue"
+      - family-names: "Homer"
+        given-names: "Nils"
+      - family-names: "Marth"
+        given-names: "Gabor"
+      - family-names: "Abecasis"
+        given-names: "Goncalo"
+      - family-names: "Durbin"
+        given-names: "Richard"
+    title: "The Sequence Alignment/Map format and SAMtools"
+    journal: "Bioinformatics"
+    volume: 25
+    issue: 16
+    start: 2078
+    end: 2079
+    year: 2009
+    doi: "10.1093/bioinformatics/btp352"
+    pmid: "19505943"
+
+  - type: software
+    authors:
+      - name: "Broad Institute"
+    title: "Picard Toolkit"
+    year: 2019
+    url: "https://broadinstitute.github.io/picard"
+    repository-code: "https://github.com/broadinstitute/picard"
+
+  - type: article
+    authors:
+      - family-names: "Shen"
+        given-names: "Shihao"
+      - family-names: "Park"
+        given-names: "Juw Won"
+      - family-names: "Lu"
+        given-names: "Zhi-xiang"
+      - family-names: "Lin"
+        given-names: "Lan"
+      - family-names: "Henry"
+        given-names: "Michael D."
+      - family-names: "Wu"
+        given-names: "Ying Nian"
+      - family-names: "Zhou"
+        given-names: "Qing"
+      - family-names: "Xing"
+        given-names: "Yi"
+    title: "rMATS: robust and flexible detection of differential alternative splicing from replicate RNA-Seq data"
+    journal: "Proceedings of the National Academy of Sciences"
+    volume: 111
+    issue: 51
+    start: "E5593"
+    end: "E5601"
+    year: 2014
+    doi: "10.1073/pnas.1419161111"
+    pmid: "25480548"

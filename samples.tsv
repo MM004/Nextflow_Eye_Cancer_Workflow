@@ -1,0 +1,9 @@
+sample_id	condition	sra_accession
+sample_1	mutant	SRR628582
+sample_2	mutant	SRR628583
+sample_3	mutant	SRR628584
+sample_4	mutant	SRR628589
+sample_5	wildtype	SRR628585
+sample_6	wildtype	SRR628586
+sample_7	wildtype	SRR628587
+sample_8	wildtype	SRR628588
