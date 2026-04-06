@@ -332,8 +332,6 @@ If you use this pipeline in your research, please cite the following foundationa
 > **Harbour JW, et al.** (2013). Recurrent mutations at codon 625 of the splicing factor SF3B1 in uveal melanoma. *Nature Genetics*, 45(2):133–135.  
 > DOI: [10.1038/ng.2523](https://doi.org/10.1038/ng.2523) · PMID: [23313955](https://pubmed.ncbi.nlm.nih.gov/23313955/)
 
----
-
 Tools:
 
 > **Anaconda Inc.** (2020). Anaconda Software Distribution. Vers. 2-2.4.0.
