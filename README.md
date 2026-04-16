@@ -14,12 +14,14 @@ Authors:
 ## Quick Start
 
 ```bash
-# 1. Activate the base conda environment
+# 1. Start screen session
+screen -S nxf
+
+# 2. Inside the screen session, activate the base conda environment
 conda activate uveal-pipeline
 
-# 2. Run the pipeline (use screen for long runs)
-screen -S nxf
-nextflow run main.nf -resume
+# 3. Run the pipeline (use screen for long runs)
+nextflow run main.nf
 
 # when using screen
 ## Detach (leave it running) — press:
